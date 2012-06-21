@@ -9,13 +9,13 @@ module ResqueDelay
 
     def method_missing(method, *args)
       queue = @options[:to] || :default
-      performable_method = PerformableMethod.create(@target, method, args)
-      Resque::Job.create(queue, DelayProxy, performable_method)
+      serializable_method = SerializableMethod.new(@target, method, args)
+      Resque::Job.create(queue, DelayProxy, serializable_method.to_yaml)
     end
 
     # Called asynchrously by Resque
     def self.perform(args)
-      PerformableMethod.new(*args).perform
+      YAML.load(args).perform
     end
   end
 
@@ -24,16 +24,6 @@ module ResqueDelay
       DelayProxy.new(self, options)
     end
     alias __delay__ delay
-
-    #def send_later(method, *args)
-    #  warn "[DEPRECATION] `object.send_later(:method)` is deprecated. Use `object.delay.method"
-    #  __delay__.__send__(method, *args)
-    #end
-    #
-    #def send_at(time, method, *args)
-    #  warn "[DEPRECATION] `object.send_at(time, :method)` is deprecated. Use `object.delay(:run_at => time).method"
-    #  __delay__(:run_at => time).__send__(method, *args)
-    #end
 
     module ClassMethods
       def handle_asynchronously(method)
