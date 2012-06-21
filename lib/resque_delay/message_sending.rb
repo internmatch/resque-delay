@@ -9,8 +9,17 @@ module ResqueDelay
 
     def method_missing(method, *args)
       queue = @options[:to] || :default
+      run_at = @options[:run_at]
+
       serializable_method = SerializableMethod.new(@target, method, args)
-      Resque::Job.create(queue, DelayProxy, serializable_method.to_yaml)
+
+      if run_at
+        # Yes the parameters should look backwards here.
+        Resque.enqueue_at_with_queue(queue, run_at, DelayProxy, 
+                                     serializable_method.to_yaml)
+      else
+        Resque.enqueue_to(queue, DelayProxy, serializable_method.to_yaml)
+      end
     end
 
     # Called asynchrously by Resque
