@@ -15,7 +15,7 @@ module ResqueDelay
 
       if run_at
         # Yes the parameters should look backwards here.
-        Resque.enqueue_at_with_queue(queue, run_at, DelayProxy, 
+        Resque.enqueue_at_with_queue(queue, run_at.to_time, DelayProxy, 
                                      serializable_method.to_yaml)
       else
         Resque.enqueue_to(queue, DelayProxy, serializable_method.to_yaml)
